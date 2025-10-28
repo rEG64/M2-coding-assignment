@@ -25,11 +25,37 @@ public class DogApiBreedFetcher implements BreedFetcher {
      */
     @Override
     public List<String> getSubBreeds(String breed) {
-        // TODO Task 1: Complete this method based on its provided documentation
-        //      and the documentation for the dog.ceo API. You may find it helpful
-        //      to refer to the examples of using OkHttpClient from the last lab,
-        //      as well as the code for parsing JSON responses.
-        // return statement included so that the starter code can compile and run.
-        return new ArrayList<>();
+       String url = "https://dog.ceo/api/breed/" + breed.toLowerCase() + "/list";
+        Request request = new Request.Builder()
+                .url(url)
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful() || response.body() == null) {
+                throw new BreedNotFoundException("Failed to fetch breed info for: " + breed);
+            }
+
+            String jsonData = response.body().string();
+            JSONObject jsonObject = new JSONObject(jsonData);
+            
+            if (!jsonObject.optString("status").equals("success")) {
+                throw new BreedNotFoundException("Breed not found: " + breed);
+            }
+
+            JSONArray subBreedsArray = jsonObject.optJSONArray("message");
+            List<String> subBreeds = new ArrayList<>();
+
+            if (subBreedsArray != null) {
+                for (int i = 0; i < subBreedsArray.length(); i++) {
+                    subBreeds.add(subBreedsArray.getString(i));
+                }
+            }
+
+            return subBreeds;
+        } catch (IOException e) {
+            throw new BreedNotFoundException("Error fetching breed data: " + e.getMessage());
+        } catch (Exception e) {
+            throw new BreedNotFoundException("Unexpected error: " + e.getMessage());
+        }
     }
 }
