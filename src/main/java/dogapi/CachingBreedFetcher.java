@@ -13,7 +13,7 @@ import java.util.*;
  * The cache maps the name of a breed to its list of sub breed names.
  */
 public class CachingBreedFetcher implements BreedFetcher {
-    private final BreedFetcher fetcher; // The underlying fetcher (e.g., DogApiBreedFetcher)
+    private final BreedFetcher fetcher; 
     private final Map<String, List<String>> cache = new HashMap<>();
     private int callsMade = 0;
 
@@ -23,23 +23,18 @@ public class CachingBreedFetcher implements BreedFetcher {
 
     @Override
     public List<String> getSubBreeds(String breed) throws BreedNotFoundException {
-        // Normalize breed name (to handle case-insensitive duplicates)
         String normalizedBreed = breed.toLowerCase();
 
-        // Check cache first
         if (cache.containsKey(normalizedBreed)) {
             return cache.get(normalizedBreed);
         }
 
-        // If not cached, call the underlying fetcher
         try {
             List<String> subBreeds = fetcher.getSubBreeds(normalizedBreed);
-            callsMade++; // Count only successful API calls
-            // Cache the result
+            callsMade++;
             cache.put(normalizedBreed, subBreeds);
             return subBreeds;
         } catch (BreedNotFoundException e) {
-            // Do not cache failed results
             throw e;
         }
     }
